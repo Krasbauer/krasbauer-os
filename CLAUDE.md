@@ -118,6 +118,7 @@ It is NOT a todo app. It is NOT a calendar app. It is a cockpit — one place wh
   notes: '',
   muted: false,          // suppress notifications for this task
   recurrence: null,      // 'daily' | 'weekly' | 'monthly' | 'weekdays' (if recurring)
+  preferredTime: null,   // 'HH:MM' preferred start time for recurring tasks (if not using routine time)
   routineId: null,       // ID of routine block (if recurring)
   projectId: null,       // ID of parent project (if subtask)
   archived: false,
