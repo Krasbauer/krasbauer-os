@@ -42,9 +42,9 @@ It is NOT a todo app. It is NOT a calendar app. It is a cockpit — one place wh
     └── icon-512.png
 ```
 
-**Architecture rule:** No build tools, no frameworks, no npm. Plain HTML + CSS + JS. Deploy = `git push` (GitHub Pages auto-deploys from main branch). The Service Worker caches all assets for full offline use after first visit.
+**Architecture rule:** No build tools, no frameworks, no npm. Plain HTML + CSS + JS. Deploy = `git push` (GitHub Pages auto-deploys from `master` branch). The Service Worker caches all assets for full offline use after first visit.
 
-**Service Worker cache name:** `krasbauer-os-v4` — bump this string in `sw.js` whenever deploying a significant update so clients pick up new files.
+**Service Worker cache name:** `krasbauer-os-v5` — bump this string in `sw.js` whenever deploying a significant update so clients pick up new files.
 
 ---
 
