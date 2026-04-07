@@ -237,7 +237,7 @@ async function initApp() {
    SERVICE WORKER
    ═══════════════════════════════════════════ */
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
+  navigator.serviceWorker.register('./sw.js')
     .then(function(reg) { console.log('[SW] Registered:', reg.scope); })
     .catch(function(err) { console.error('[SW] Failed:', err); });
 }
