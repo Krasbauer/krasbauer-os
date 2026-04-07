@@ -275,6 +275,27 @@ Subtasks are regular tasks with `projectId` set. Deleting a project unlinks subt
 - **Variable shadow fixed:** `db2` renamed to `dateB` in sort comparator.
 - **Date string consistency:** All manual `YYYY-MM-DD` constructions replaced with `calDateStr()`.
 
+### Phase 10.5 — Polish II (Recurring Tasks & Routine Rendering) ✅
+- **Time picker for recurring tasks:** Recurring task form now shows "Preferred Start Time" input (defaults 08:00)
+  - Time picker is always visible on form, even when task is part of routine
+  - `preferredTime` stored on task object; used by `generateRecurringSlots()` with priority: preferredTime → routine.startTime → 8:00 AM
+  - When editing a recurring task, time picker pre-populates with saved preferredTime
+- **Routine block calendar rendering:** Routine blocks now render as collapsible grouped containers on calendar
+  - Slots with matching `routineId` are grouped together in `.cal-routine-block` (blue dashed border)
+  - Header shows routine name + total duration
+  - Click header to expand/collapse and view all tasks in routine
+  - Individual tasks inside show domain dot, title, and time range
+  - Non-routine tasks continue to render normally
+  - CSS already existed (style.css lines 1844-1901), rendering logic implemented in `renderCalendar()`
+- **Manual refresh button:** Added refresh button (↻) next to settings gear in header
+  - `refreshAllData()` reloads all IndexedDB data + re-renders Calendar, Dashboard, Tasks
+  - Shows toast confirmation "Data refreshed"
+  - Useful for syncing across tabs or forcing UI update
+- **Automated cache version bumping:** GitHub Action `.github/workflows/bump-cache.yml` auto-increments `CACHE_NAME` on every push
+  - Workflow runs on push to master, extracts current version, increments, commits back
+  - Uses `[skip ci]` to prevent infinite loops
+  - No manual cache versioning needed anymore; PWA users always get fresh assets on next visit
+
 ---
 
 ## What's NOT Built Yet
