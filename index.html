@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="KrasbauerOS — Life Operating System">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>KrasbauerOS</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+  <!-- ═══ ALARM BANNER ═══ -->
+  <div id="alarm-banner">
+    <div class="alarm-icon">🔔</div>
+    <div class="alarm-info">
+      <div class="alarm-title" id="alarm-banner-title"></div>
+      <div class="alarm-sub" id="alarm-banner-sub"></div>
+    </div>
+    <button class="alarm-dismiss" onclick="dismissAlarmBanner()">Dismiss</button>
+  </div>
+
+  <!-- ═══ HEADER ═══ -->
+  <header id="app-header">
+    <div class="logo">KrasbauerOS <span class="version-badge">v9.0</span></div>
+    <div class="header-actions">
+      <button class="header-btn" id="settings-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══ TAB CONTENT ═══ -->
+  <main id="tab-content-area">
+
+    <!-- ─── DASHBOARD ─── -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="dashboard-greeting fade-in-up fade-in-up-1">
+        <p class="date" id="today-date"></p>
+        <h1>Good morning, <span>Krasbauer</span></h1>
+      </div>
+
+      <div class="swipe-container fade-in-up fade-in-up-2">
+        <div class="swipe-track" id="dashboard-track">
+
+          <!-- Panel 1: Today -->
+          <div class="swipe-panel" id="dash-today">
+            <div class="ritual-card" id="morning-ritual-card" onclick="openMorningRitual()">
+              <div class="ritual-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              </div>
+              <div class="ritual-text">
+                <h3>Morning Ritual</h3>
+                <p>Plan your day in 5 minutes</p>
+              </div>
+              <svg class="ritual-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+
+            <div class="ritual-card" id="shutdown-ritual-card" style="display:none;border-color:#7B61FF;" onclick="openShutdownRitual()">
+              <div class="ritual-icon" style="background:rgba(123,97,255,0.12);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#7B61FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </div>
+              <div class="ritual-text">
+                <h3>Shutdown Ritual</h3>
+                <p>Close your day in 2 minutes</p>
+              </div>
+              <svg class="ritual-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+
+            <!-- Overcommitment warning -->
+            <div id="overcommit-warning" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:none;">
+              <div style="font-size:13px;color:#EF4444;font-weight:500;">⚠️ Overcommitted</div>
+              <div id="overcommit-text" style="font-size:11px;color:var(--text-secondary);margin-top:2px;"></div>
+            </div>
+
+            <p class="section-title">Today's Agenda</p>
+
+            <div id="dash-today-list">
+              <!-- Populated by JS -->
+            </div>
+            <div class="empty-state" id="dash-today-empty" style="display:none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <h3>No tasks scheduled</h3>
+              <p>Open the Calendar tab to schedule tasks for today.</p>
+            </div>
+          </div>
+
+          <!-- Panel 2: Overview -->
+          <div class="swipe-panel" id="dash-overview">
+            <p class="section-title">Domain Activity — Last 7 Days</p>
+
+            <div id="domain-bars">
+              <!-- Generated by JS -->
+            </div>
+
+            <p class="section-title" style="margin-top: 24px;">Active Projects</p>
+            <div id="active-projects-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <div class="swipe-dots">
+          <button class="swipe-dot active" data-panel="0" aria-label="Today"></button>
+          <button class="swipe-dot" data-panel="1" aria-label="Overview"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TASKS ─── -->
+    <div class="tab-panel" id="panel-tasks">
+      <div class="task-header">
+        <p class="section-title" style="margin-bottom:0;">All Tasks</p>
+        <span class="task-count" id="task-count"></span>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="task-search" placeholder="Search tasks..." oninput="applyFilters()">
+      </div>
+
+      <!-- Filter pills -->
+      <div class="filter-row" id="filter-row">
+        <button class="filter-pill active" data-filter="all" onclick="setFilter('all',this)">All</button>
+        <button class="filter-pill" data-filter="status:todo" onclick="setFilter('status:todo',this)">Todo</button>
+        <button class="filter-pill" data-filter="status:scheduled" onclick="setFilter('status:scheduled',this)">Scheduled</button>
+        <button class="filter-pill" data-filter="status:inprogress" onclick="setFilter('status:inprogress',this)">In Progress</button>
+        <button class="filter-pill" data-filter="status:done" onclick="setFilter('status:done',this)">Done</button>
+        <button class="filter-pill" data-filter="status:reported" onclick="setFilter('status:reported',this)">Reported</button>
+        <button class="filter-pill" data-filter="priority:do-first" onclick="setFilter('priority:do-first',this)">🔴 Do First</button>
+        <button class="filter-pill" data-filter="priority:schedule" onclick="setFilter('priority:schedule',this)">🟡 Schedule</button>
+        <button class="filter-pill" data-filter="priority:delegate" onclick="setFilter('priority:delegate',this)">🟠 Delegate</button>
+        <button class="filter-pill" data-filter="type:one-off" onclick="setFilter('type:one-off',this)">One-off</button>
+        <button class="filter-pill" data-filter="type:recurring" onclick="setFilter('type:recurring',this)">Recurring</button>
+        <button class="filter-pill" data-filter="type:project" onclick="setFilter('type:project',this)">Project</button>
+      </div>
+
+      <!-- Domain filter row -->
+      <div class="filter-row" id="domain-filter-row">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Sort -->
+      <div class="sort-row">
+        <span class="sort-label" id="sort-info">Sorted by priority</span>
+        <button class="sort-btn" id="sort-toggle" onclick="cycleSort()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"></path></svg>
+          Sort
+        </button>
+      </div>
+
+      <!-- Task list -->
+      <div id="task-list-container">
+        <!-- Populated by JS -->
+      </div>
+      <div class="empty-state" id="tasks-empty" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"></path>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        <h3>No tasks found</h3>
+        <p>Tap the + button to create your first task.</p>
+      </div>
+
+      <!-- Archive toggle -->
+      <button class="archive-toggle" id="archive-toggle" onclick="toggleShowArchived()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+        <span id="archive-toggle-text">Show archived</span>
+      </button>
+    </div>
+
+    <!-- ─── CALENDAR ─── -->
+    <div class="tab-panel" id="panel-calendar">
+      <!-- Calendar header: nav + view toggle -->
+      <div class="cal-header">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="calNavPrev()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div>
+            <div class="cal-date-label" id="cal-date-label"></div>
+            <div class="cal-date-sub" id="cal-date-sub"></div>
+          </div>
+          <button class="cal-nav-btn" onclick="calNavNext()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+        <div class="cal-actions">
+          <button class="cal-today-btn" onclick="calGoToday()">Today</button>
+          <button class="cal-view-toggle" id="cal-view-toggle" onclick="calToggleView()">Week</button>
+        </div>
+      </div>
+
+      <!-- Week day strip -->
+      <div class="cal-week-strip" id="cal-week-strip">
+        <!-- Generated by JS -->
+      </div>
+
+      <!-- Time grid -->
+      <div class="cal-grid" id="cal-grid">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- ─── PROJECTS ─── -->
+    <div class="tab-panel" id="panel-projects">
+      <div class="projects-header fade-in-up">
+        <div class="projects-header-left">
+          <p class="section-title" style="margin-bottom:0;">Projects</p>
+          <span class="proj-count" id="proj-count"></span>
+        </div>
+        <button class="proj-add-btn" onclick="openProjectModal()" aria-label="New Project">+</button>
+      </div>
+
+      <div id="proj-list-container">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="empty-state" id="proj-empty" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+        <h3>No projects yet</h3>
+        <p>Track multi-step goals with subtasks and progress.</p>
+      </div>
+
+      <button class="proj-archive-toggle" id="proj-archive-toggle" onclick="toggleShowArchivedProjects()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+        <span id="proj-archive-toggle-text">Show archived</span>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ═══ BOTTOM TAB BAR ═══ -->
+  <nav id="tab-bar" data-active="0">
+    <button class="tab-btn active" data-tab="dashboard" aria-label="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </button>
+    <button class="tab-btn" data-tab="tasks" aria-label="Tasks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      <span>Tasks</span>
+    </button>
+    <button class="tab-btn" data-tab="calendar" aria-label="Calendar">
+      <span class="tab-badge" id="cal-tab-badge"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      <span>Calendar</span>
+    </button>
+    <button class="tab-btn" data-tab="projects" aria-label="Projects">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+      </svg>
+      <span>Projects</span>
+    </button>
+  </nav>
+
+  <!-- ═══ PROJECT DETAIL OVERLAY ═══ -->
+  <div id="proj-overlay">
+    <div class="proj-overlay-header">
+      <button class="proj-overlay-back" onclick="closeProjectDetail()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div class="proj-overlay-title" id="proj-overlay-title">Project</div>
+      <div class="proj-overlay-actions">
+        <button class="proj-overlay-btn" id="proj-overlay-edit-btn" onclick="editCurrentProject()">Edit</button>
+        <button class="proj-overlay-btn archive-btn" id="proj-overlay-archive-btn" onclick="archiveCurrentProject()">Archive</button>
+        <button class="proj-overlay-btn danger" onclick="deleteCurrentProject()">Delete</button>
+      </div>
+    </div>
+    <div class="proj-overlay-body" id="proj-overlay-body">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- ═══ RITUAL FLOW OVERLAY ═══ -->
+  <div id="ritual-overlay">
+    <div class="ritual-header">
+      <h2 id="ritual-overlay-title">Morning Ritual</h2>
+      <button class="ritual-close" onclick="closeRitual()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="ritual-steps" id="ritual-step-dots"></div>
+    <div class="ritual-body" id="ritual-body"></div>
+    <div class="ritual-footer" id="ritual-footer"></div>
+  </div>
+
+  <!-- ═══ SLOT PICKER (Calendar popup) ═══ -->
+  <div class="slot-picker-backdrop" id="slot-picker-backdrop" onclick="closeSlotPicker()">
+    <div class="slot-picker" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="slot-picker-header">
+        <h3 id="slot-picker-title">Assign Task</h3>
+        <p id="slot-picker-sub">Pick a task for this slot</p>
+      </div>
+      <div class="slot-picker-list" id="slot-picker-list">
+        <!-- Populated by JS -->
+      </div>
+      <div class="slot-picker-actions">
+        <button class="modal-cancel" onclick="closeSlotPicker()">Cancel</button>
+        <button class="modal-save" onclick="createTaskForSlot()">+ New Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ FAB — Add Task ═══ -->
+  <button class="fab" id="fab-add-task" onclick="openTaskForm()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  </button>
+
+  <!-- ═══ TASK FORM (bottom sheet) ═══ -->
+  <div id="task-form-backdrop" onclick="closeTaskForm()"></div>
+  <div id="task-form-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2 id="task-form-title">New Task</h2>
+      <button class="sheet-delete-btn" id="task-form-delete" onclick="deleteCurrentTask()">Delete</button>
+    </div>
+    <div class="sheet-body">
+      <input type="hidden" id="tf-id">
+      <input type="hidden" id="tf-project-id">
+
+      <!-- Title -->
+      <div class="field-group">
+        <div class="field-label">Title</div>
+        <input type="text" class="field-text-input" id="tf-title" placeholder="What needs to be done?">
+      </div>
+
+      <!-- Domain -->
+      <div class="field-group">
+        <div class="field-label">Domain</div>
+        <div class="chip-selector" id="tf-domain-chips">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+      <!-- Type -->
+      <div class="field-group">
+        <div class="field-label">Type</div>
+        <div class="chip-selector" id="tf-type-chips">
+          <button class="chip-option selected" data-value="one-off">One-off</button>
+          <button class="chip-option" data-value="recurring">Recurring</button>
+          <button class="chip-option" data-value="project">Project</button>
+        </div>
+      </div>
+
+      <!-- Priority (Eisenhower) -->
+      <div class="field-group">
+        <div class="field-label">Priority</div>
+        <div class="chip-selector" id="tf-priority-chips">
+          <button class="chip-option" data-value="do-first" style="border-color:rgba(239,68,68,0.3);color:#EF4444;">🔴 Do First</button>
+          <button class="chip-option selected" data-value="schedule" style="border-color:rgba(245,158,11,0.3);color:#F59E0B;">🟡 Schedule</button>
+          <button class="chip-option" data-value="delegate" style="border-color:rgba(249,115,22,0.3);color:#F97316;">🟠 Delegate</button>
+          <button class="chip-option" data-value="eliminate" style="border-color:rgba(107,114,128,0.3);color:#9CA3AF;">⚪ Eliminate</button>
+        </div>
+      </div>
+
+      <!-- Duration -->
+      <div class="field-group">
+        <div class="field-label">Duration</div>
+        <div class="chip-selector" id="tf-duration-chips">
+          <button class="chip-option" data-value="15">15m</button>
+          <button class="chip-option selected" data-value="30">30m</button>
+          <button class="chip-option" data-value="60">1h</button>
+          <button class="chip-option" data-value="120">2h</button>
+          <button class="chip-option" data-value="custom">Custom</button>
+        </div>
+        <input type="number" class="field-text-input" id="tf-duration-custom" placeholder="Minutes" style="display:none;margin-top:8px;width:120px;" min="5" step="5">
+      </div>
+
+      <!-- Status -->
+      <div class="field-group" id="tf-status-group" style="display:none;">
+        <div class="field-label">Status</div>
+        <div class="chip-selector" id="tf-status-chips">
+          <button class="chip-option selected" data-value="todo">Todo</button>
+          <button class="chip-option" data-value="scheduled">Scheduled</button>
+          <button class="chip-option" data-value="inprogress">In Progress</button>
+          <button class="chip-option" data-value="done">Done</button>
+          <button class="chip-option" data-value="reported">Reported</button>
+        </div>
+      </div>
+
+      <!-- Recurrence (shown when type = recurring) -->
+      <div class="field-group" id="tf-recurrence-group" style="display:none;">
+        <div class="field-label">Repeats</div>
+        <div class="chip-selector" id="tf-recurrence-chips">
+          <button class="chip-option selected" data-value="daily">Daily</button>
+          <button class="chip-option" data-value="weekly">Weekly</button>
+          <button class="chip-option" data-value="monthly">Monthly</button>
+          <button class="chip-option" data-value="weekdays">Weekdays</button>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="field-label">Part of Routine (optional)</div>
+          <select id="tf-routine-select" class="field-text-input" style="padding:10px 12px;">
+            <option value="">None</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Due Date -->
+      <div class="field-group">
+        <div class="field-label">Due Date (optional)</div>
+        <input type="date" class="field-date-input" id="tf-due">
+      </div>
+
+      <!-- Notes -->
+      <div class="field-group">
+        <div class="field-label">Notes (optional)</div>
+        <textarea class="field-text-input" id="tf-notes" placeholder="Phone numbers, links, details..."></textarea>
+      </div>
+
+      <!-- Mute notifications -->
+      <div class="field-group" id="tf-mute-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div class="field-label" style="margin-bottom:0;">Mute Notifications</div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">No alarms for this task</div>
+          </div>
+          <label style="position:relative;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="tf-muted" style="display:none;">
+            <span id="tf-mute-track" style="position:absolute;inset:0;background:var(--bg-tertiary);border:1px solid var(--border-subtle);border-radius:12px;transition:all 0.2s;"></span>
+            <span id="tf-mute-thumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:var(--text-tertiary);border-radius:50%;transition:all 0.2s;"></span>
+          </label>
+        </div>
+      </div>
+
+      <button class="sheet-save-btn" onclick="saveTaskForm()">Save Task</button>
+    </div>
+  </div>
+
+  <!-- ═══ SETTINGS PANEL ═══ -->
+  <div id="settings-overlay" onclick="closeSettings()"></div>
+  <div id="settings-panel">
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button class="settings-close" onclick="closeSettings()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="settings-body">
+
+      <!-- Schedule -->
+      <div class="settings-section">
+        <p class="settings-section-title">Daily Schedule</p>
+        <div class="form-row">
+          <div class="form-label">Wake time</div>
+          <input type="time" class="form-input" id="setting-wake" value="06:00">
+        </div>
+        <div class="form-row">
+          <div class="form-label">Sleep time</div>
+          <input type="time" class="form-input" id="setting-sleep" value="23:00">
+        </div>
+        <div class="form-row">
+          <div class="form-label">
+            Shutdown ritual alarm
+            <small>Evening notification</small>
+          </div>
+          <input type="time" class="form-input" id="setting-ritual" value="21:00">
+        </div>
+      </div>
+
+      <!-- Domains -->
+      <div class="settings-section">
+        <p class="settings-section-title">Life Domains</p>
+        <div id="domain-list">
+          <!-- Populated by JS -->
+        </div>
+        <button class="add-domain-btn" onclick="openDomainModal()">+ Add Domain</button>
+      </div>
+
+      <!-- Routines -->
+      <div class="settings-section">
+        <p class="settings-section-title">Routine Blocks</p>
+        <div id="routine-list">
+          <!-- Populated by JS -->
+        </div>
+        <button class="add-domain-btn" onclick="openRoutineModal()">+ Add Routine</button>
+      </div>
+
+      <!-- Data -->
+      <div class="settings-section">
+        <p class="settings-section-title">Data</p>
+        <div class="settings-btn-row">
+          <button class="settings-action-btn" onclick="exportData()">Export JSON</button>
+          <button class="settings-action-btn" onclick="document.getElementById('import-file-input').click()">Import JSON</button>
+        </div>
+        <div id="backup-status-card" style="display:none;">
+          <!-- Populated by JS -->
+        </div>
+        <div class="settings-btn-row" style="margin-top: 12px;">
+          <button class="settings-action-btn danger" onclick="confirmResetData()">Reset All Data</button>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="settings-section">
+        <p class="settings-section-title">About</p>
+        <div style="font-size: 12px; color: var(--text-tertiary); line-height: 1.6;">
+          <strong style="color: var(--text-secondary);">KrasbauerOS</strong> v9.0 — Phase 9<br>
+          Data stored locally on this device via IndexedDB.<br>
+          Export regularly to avoid data loss.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ DOMAIN EDIT MODAL ═══ -->
+  <div class="modal-backdrop" id="domain-modal">
+    <div class="modal-content">
+      <p class="modal-title" id="domain-modal-title">Add Domain</p>
+      <input type="hidden" id="domain-edit-id">
+      <div class="modal-field">
+        <label>Name</label>
+        <input type="text" id="domain-edit-name" placeholder="e.g. Fitness">
+      </div>
+      <div class="modal-field">
+        <label>Icon (emoji)</label>
+        <input type="text" id="domain-edit-icon" placeholder="e.g. 💪" maxlength="4">
+      </div>
+      <div class="modal-field">
+        <label>Color</label>
+        <div class="color-row">
+          <input type="color" id="domain-edit-color" value="#3B82F6">
+          <span id="domain-edit-color-hex">#3B82F6</span>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Inactivity alert (days)</label>
+        <input type="number" id="domain-edit-alert" value="5" min="1" max="30">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeDomainModal()">Cancel</button>
+        <button class="modal-save" onclick="saveDomain()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ROUTINE EDIT MODAL ═══ -->
+  <div class="modal-backdrop" id="routine-modal">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <p class="modal-title" id="routine-modal-title">Add Routine</p>
+      <input type="hidden" id="routine-edit-id">
+      <div class="modal-field">
+        <label>Routine Name</label>
+        <input type="text" id="routine-edit-name" placeholder="e.g. Morning Routine">
+      </div>
+      <div class="modal-field">
+        <label>Schedule</label>
+        <div class="chip-selector" id="routine-sched-chips">
+          <button class="chip-option selected" data-value="daily">Daily</button>
+          <button class="chip-option" data-value="weekdays">Weekdays</button>
+          <button class="chip-option" data-value="weekly">Weekly</button>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Start Time</label>
+        <input type="time" class="form-input" id="routine-edit-time" value="06:00">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeRoutineModal()">Cancel</button>
+        <button class="modal-save" onclick="saveRoutine()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PROJECT CREATE/EDIT MODAL ═══ -->
+  <div class="modal-backdrop" id="proj-modal" onclick="closeProjectModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <p class="modal-title" id="proj-modal-title">New Project</p>
+      <input type="hidden" id="proj-edit-id">
+      <div class="modal-field">
+        <label>Title</label>
+        <input type="text" id="proj-edit-name" placeholder="e.g. Launch freelance website">
+      </div>
+      <div class="modal-field">
+        <label>Domain</label>
+        <div class="chip-selector" id="proj-domain-chips">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Notes (optional)</label>
+        <textarea id="proj-edit-notes" placeholder="Goals, context, links..." style="width:100%;background:var(--bg-tertiary);border:1px solid var(--border-subtle);border-radius:8px;color:var(--text-primary);font-family:var(--font-body);font-size:13px;padding:10px 12px;resize:none;outline:none;min-height:72px;line-height:1.5;"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeProjectModal()">Cancel</button>
+        <button class="modal-save" onclick="saveProjectModal()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ IMPORT PREVIEW MODAL ═══ -->
+  <div class="modal-backdrop" id="import-preview-modal" onclick="closeImportPreview()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <p class="modal-title">Import Backup</p>
+      <div class="import-date-row" id="import-preview-date"></div>
+      <div id="import-preview-rows"></div>
+      <div class="import-warning">This will permanently replace ALL your current data. This cannot be undone.</div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeImportPreview()">Cancel</button>
+        <button class="modal-save" style="background:#EF4444;" onclick="confirmImport()">Replace All Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST ═══ -->
+  <div id="toast"></div>
+
+  <!-- ═══ HIDDEN FILE INPUT ═══ -->
+  <input type="file" id="import-file-input" accept=".json" onchange="importData(event)">
+
+  <!-- ═══ PWA INSTALL PROMPT ═══ -->
+  <div id="install-prompt">
+    <div class="install-text">
+      <h3>Install KrasbauerOS</h3>
+      <p>Add to home screen for the full experience</p>
+    </div>
+    <button id="install-dismiss" onclick="dismissInstall()">Later</button>
+    <button id="install-btn" onclick="installApp()">Install</button>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       ONBOARDING OVERLAY
+       ═══════════════════════════════════════════ -->
+  <div id="onboarding-overlay">
+    <div class="ritual-steps" id="onboarding-step-dots"></div>
+    <div class="ritual-body" id="onboarding-body"></div>
+    <div class="ritual-footer" id="onboarding-footer"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       JAVASCRIPT
+       ═══════════════════════════════════════════ -->
+  <script src="app.js"></script>
+
+</body>
+</html>
