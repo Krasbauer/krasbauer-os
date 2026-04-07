@@ -2291,7 +2291,8 @@ async function saveSettings() {
   appSettings.sleepTime = document.getElementById('setting-sleep').value;
   appSettings.ritualAlarmTime = document.getElementById('setting-ritual').value;
   await dbPut('settings', appSettings);
-  console.log('[Settings] Saved');
+  await renderCalendar();
+  await renderDashboardToday();
 }
 
 /* ─── Domain List in Settings ─── */
@@ -3151,7 +3152,7 @@ function renderOnboardingStep() {
   // Step dots
   var dotHtml = '';
   for (var i = 0; i < 3; i++) {
-    dotHtml += '<div class="ritual-dot' + (i === onboardingStep ? ' active' : '') + '"></div>';
+    dotHtml += '<div class="ritual-step-dot' + (i === onboardingStep ? ' active' : '') + '"></div>';
   }
   dots.innerHTML = dotHtml;
 
@@ -3161,7 +3162,7 @@ function renderOnboardingStep() {
       '<div class="onboarding-tagline">Your personal Life OS.</div>' +
       '<div class="onboarding-desc">One cockpit for every task, project, and domain in your life. Built for clarity, built for you.</div>';
     footer.innerHTML =
-      '<button class="btn btn-primary" onclick="onboardingNext()" style="flex:1">Get Started →</button>';
+      '<button class="ritual-btn ritual-btn-primary" onclick="onboardingNext()">Get Started →</button>';
 
   } else if (onboardingStep === 1) {
     var wake = (appSettings && appSettings.wakeTime) || '07:00';
@@ -3171,13 +3172,13 @@ function renderOnboardingStep() {
       '<div class="onboarding-tagline">Set your schedule</div>' +
       '<div class="onboarding-desc">KrasbauerOS uses these times to build your day.</div>' +
       '<div class="onboarding-schedule-form">' +
-        '<div class="form-row"><span class="form-label">Wake time</span><input type="time" id="ob-wake" value="' + wake + '" class="time-input"></div>' +
-        '<div class="form-row"><span class="form-label">Sleep time</span><input type="time" id="ob-sleep" value="' + sleep + '" class="time-input"></div>' +
-        '<div class="form-row"><span class="form-label">Shutdown alarm</span><input type="time" id="ob-ritual" value="' + ritual + '" class="time-input"></div>' +
+        '<div class="form-row"><span class="form-label">Wake time</span><input type="time" id="ob-wake" value="' + wake + '" class="form-input"></div>' +
+        '<div class="form-row"><span class="form-label">Sleep time</span><input type="time" id="ob-sleep" value="' + sleep + '" class="form-input"></div>' +
+        '<div class="form-row"><span class="form-label">Shutdown alarm</span><input type="time" id="ob-ritual" value="' + ritual + '" class="form-input"></div>' +
       '</div>';
     footer.innerHTML =
-      '<button class="btn btn-secondary" onclick="onboardingBack()" style="flex:1">← Back</button>' +
-      '<button class="btn btn-primary" onclick="onboardingNext()" style="flex:1">Next →</button>';
+      '<button class="ritual-btn ritual-btn-secondary" onclick="onboardingBack()">← Back</button>' +
+      '<button class="ritual-btn ritual-btn-primary" onclick="onboardingNext()">Next →</button>';
 
   } else if (onboardingStep === 2) {
     body.innerHTML =
@@ -3185,8 +3186,8 @@ function renderOnboardingStep() {
       '<div class="onboarding-ready-title">You\'re all set, Krasbauer.</div>' +
       '<div class="onboarding-ready-sub">Your cockpit is ready. Start by adding your first task or project.</div>';
     footer.innerHTML =
-      '<button class="btn btn-secondary" onclick="onboardingBack()" style="flex:1">← Back</button>' +
-      '<button class="btn btn-primary" onclick="completeOnboarding()" style="flex:1">Let\'s go ✓</button>';
+      '<button class="ritual-btn ritual-btn-secondary" onclick="onboardingBack()">← Back</button>' +
+      '<button class="ritual-btn ritual-btn-primary" onclick="completeOnboarding()">Let\'s go ✓</button>';
   }
 }
 

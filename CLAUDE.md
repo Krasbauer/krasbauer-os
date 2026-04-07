@@ -64,7 +64,7 @@ It is NOT a todo app. It is NOT a calendar app. It is a cockpit — one place wh
 - **Protected Time Zones** removed — redundant with Routine Blocks.
 - **Focus Mode, Command Palette, Weekly Objectives** dropped for scope.
 - **Project milestones** simplified to subtask checklists only.
-- **AI Secretary** is Phase 11 (future). Addresses user as "Krasbauer", default tone sharp & direct.
+
 
 ---
 
@@ -119,7 +119,7 @@ It is NOT a todo app. It is NOT a calendar app. It is a cockpit — one place wh
   projectId: null,       // ID of parent project (if subtask)
   archived: false,
   rolloverCount: 0,
-  blockType: 'flexible', // 'flexible' | 'anchored' (for Phase 11 AI)
+  blockType: 'flexible', // 'flexible' | 'anchored'
   createdAt: Date.now(),
   updatedAt: Date.now(),
   completedAt: null
@@ -275,13 +275,12 @@ Subtasks are regular tasks with `projectId` set. Deleting a project unlinks subt
 
 ## What's NOT Built Yet
 
-### Phase 11 — AI Secretary (future)
-- 6 AI moments: task creation assistance, smart scheduling, balance coaching, project companion, weekly review facilitation, persistent chat sidebar
-- Ambient suggestions (dismissible) + on-demand sidebar chat
-- Configurable personality; default: sharp & direct executive assistant
-- Addresses user as "Krasbauer"
-- AI suggests, human approves — never full autopilot. AI cannot move Anchored blocks.
-- Anthropic API integration (claude-sonnet model)
+### Wheel of Life (deferred — Phase 11 candidate)
+The core system needs to prove itself through real use first. When ready:
+- 5th Dashboard panel (or full-screen overlay): 8 domain sliders, 0–10 score each
+- Radar/wheel chart visualization
+- Scores saved to new `life_scores` IndexedDB store — requires DB_VERSION bump to 2
+- Optional: trend view (this week vs last week)
 
 ---
 
