@@ -161,7 +161,7 @@ Subtasks are regular tasks with `projectId` set. Deleting a project unlinks subt
 - **Chip selectors:** `initChipSelector(id)`, `selectChip(id, value)`, `getSelectedChip(id)` — used in all forms
 - **Date strings:** Always use `calDateStr(dateObj)` → `YYYY-MM-DD`. Never build manually.
 - **Error handling pattern:** All async mutation functions have try/catch. On error: `console.error('[fnName]', err)` + `showToast('Action failed — try again')`.
-- **Service Worker cache version:** `krasbauer-os-v4`
+- **Service Worker cache version:** `krasbauer-os-v5` (auto-bumped via GitHub Action on every push)
 
 ---
 
