@@ -37,6 +37,9 @@ It is NOT a todo app. It is NOT a calendar app. It is a cockpit — one place wh
 ├── sw.js                     ← Service Worker (caching + notifications)
 ├── manifest.json             ← PWA config
 ├── CLAUDE.md                 ← this file
+├── .github/
+│   └── workflows/
+│       └── bump-cache.yml    ← GitHub Action (auto-bumps cache version)
 └── icons/
     ├── icon-192.png
     └── icon-512.png
