@@ -39,7 +39,7 @@ self.addEventListener('fetch', (event) => {
         }
         return resp;
       }).catch(() => {
-        if (event.request.mode === 'navigate') return caches.match('/index.html');
+        if (event.request.mode === 'navigate') return caches.match(BASE + '/index.html');
       });
     })
   );
