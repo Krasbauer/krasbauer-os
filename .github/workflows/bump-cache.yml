@@ -1,0 +1,44 @@
+name: Auto-bump Cache Version
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'krasbauer-os/**'
+      - '!krasbauer-os/.github/**'
+
+jobs:
+  bump-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump cache version
+        run: |
+          cd krasbauer-os
+
+          # Extract current version number (e.g., v4 -> 4)
+          CURRENT=$(grep "const CACHE_NAME" sw.js | grep -oP "v\K\d+" | head -1)
+          NEW=$((CURRENT + 1))
+
+          # Replace in sw.js
+          sed -i "s/krasbauer-os-v${CURRENT}/krasbauer-os-v${NEW}/g" sw.js
+
+          echo "Cache bumped: v${CURRENT} → v${NEW}"
+
+      - name: Commit and push
+        run: |
+          cd krasbauer-os
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "No changes needed"
+          else
+            git add sw.js
+            git commit -m "chore: auto-bump cache version [skip ci]"
+            git push
+          fi
