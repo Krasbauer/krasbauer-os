@@ -1,4 +1,4 @@
-const CACHE_NAME = 'krasbauer-os-v5';
+const CACHE_NAME = 'krasbauer-os-v6';
 const BASE = '/krasbauer-os';
 const ASSETS_TO_CACHE = [
   BASE + '/',
