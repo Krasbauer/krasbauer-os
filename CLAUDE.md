@@ -339,7 +339,7 @@ The core system needs to prove itself through real use first. When ready:
 
 Push to GitHub — GitHub Pages auto-deploys from the `master` branch. Live URL: `https://krasbauer.github.io/krasbauer-os`
 
-**Note:** If deploying after significant JS/CSS changes, bump the cache name in `sw.js` (currently `krasbauer-os-v5`) so returning users get fresh assets immediately.
+**Cache versioning:** Fully automated via GitHub Action `.github/workflows/bump-cache.yml`. Every push increments the Service Worker cache version automatically. PWA users will pick up fresh assets on their next visit with zero manual intervention.
 
 ---
 
