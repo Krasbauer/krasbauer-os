@@ -1266,7 +1266,24 @@ async function renderCalendar() {
     }
   });
 
-  for (var h = wakeHour; h < sleepHour; h++) {
+  // Generate hour list, handling sleep times that cross midnight
+  var hours = [];
+  if (sleepHour > wakeHour) {
+    // Normal case: wake at 8, sleep at 23
+    for (var h = wakeHour; h < sleepHour; h++) {
+      hours.push(h);
+    }
+  } else {
+    // Midnight wraparound: wake at 22, sleep at 6
+    for (var h = wakeHour; h <= 23; h++) {
+      hours.push(h);
+    }
+    for (var h = 0; h < sleepHour; h++) {
+      hours.push(h);
+    }
+  }
+
+  hours.forEach(function(h) {
     var label = (h < 10 ? '0' : '') + h + ':00';
     gridHtml += '<div class="cal-hour-row" data-hour="' + h + '">' +
       '<div class="cal-hour-label">' + label + '</div>' +
@@ -1292,7 +1309,7 @@ async function renderCalendar() {
     });
 
     gridHtml += '</div></div>';
-  }
+  });
 
   // Render routine blocks overlaid on the grid
   for (var rId in routineSlots) {
@@ -1335,8 +1352,17 @@ async function renderCalendar() {
     var now = new Date();
     var nowHour = now.getHours();
     var nowMin = now.getMinutes();
-    if (nowHour >= wakeHour && nowHour < sleepHour) {
-      var topPx = ((nowHour - wakeHour) * 60) + nowMin;
+    var isNowInRange = false;
+    if (sleepHour > wakeHour) {
+      isNowInRange = nowHour >= wakeHour && nowHour < sleepHour;
+    } else {
+      // Midnight wraparound
+      isNowInRange = nowHour >= wakeHour || nowHour < sleepHour;
+    }
+    if (isNowInRange) {
+      var offsetHour = (sleepHour > wakeHour) ? (nowHour - wakeHour) :
+                       (nowHour >= wakeHour) ? (nowHour - wakeHour) : (24 - wakeHour + nowHour);
+      var topPx = (offsetHour * 60) + nowMin;
       gridHtml += '<div class="cal-now-line" style="top:' + topPx + 'px;"></div>';
     }
   }
