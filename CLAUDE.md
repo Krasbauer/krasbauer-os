@@ -365,5 +365,6 @@ Push to GitHub — GitHub Pages auto-deploys from the `master` branch. Live URL:
 - **After any DB mutation:** call `await loadAllTasks()` before rendering.
 - **New async functions that navigate calendar:** must `await renderCalendar()`, not fire-and-forget.
 - **Error handling:** wrap DB mutation bodies in try/catch following the established pattern.
-- **Before reading `app.js` or `style.css`,** always Grep for the relevant function first — never read the full file. `app.js` is ~3200 lines; `style.css` is ~3000 lines.
+- **Before reading `app.js` or `style.css`,** always Grep for the relevant function first — never read the full file. `app.js` is ~3300 lines; `style.css` is ~3000 lines.
 - **When the user says "go"** on the next phase, build it completely — do not leave stubs or TODOs.
+- **Cache versioning is automated** — do NOT manually bump `CACHE_NAME` in `sw.js`. GitHub Action handles it on every push.
