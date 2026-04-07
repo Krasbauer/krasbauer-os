@@ -3234,7 +3234,7 @@ document.addEventListener('click', function() {
 async function refreshAllData() {
   try {
     await loadAllTasks();
-    await loadAllProjects();
+    await loadProjects();
     await loadRoutines();
     await loadSettings();
     await loadDomains();
