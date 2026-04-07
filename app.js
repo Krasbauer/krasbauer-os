@@ -3340,4 +3340,4 @@ async function completeOnboarding() {
    ═══════════════════════════════════════════ */
 initApp();
 
-console.log('%c KrasbauerOS v9.0 — Phase 9 ', 'background: #0a0a0f; color: #3B82F6; font-size: 14px; font-weight: bold; padding: 8px 12px; border: 1px solid #3B82F6; border-radius: 4px;');
+console.log('%c KrasbauerOS v10.5 — Phase 10.5 ', 'background: #0a0a0f; color: #3B82F6; font-size: 14px; font-weight: bold; padding: 8px 12px; border: 1px solid #3B82F6; border-radius: 4px;');
