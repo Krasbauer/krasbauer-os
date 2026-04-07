@@ -79,8 +79,8 @@ self.addEventListener('message', (event) => {
     const { title, body, tag, data } = payload;
     self.registration.showNotification(title, {
       body: body,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      icon: BASE + '/icons/icon-192.png',
+      badge: BASE + '/icons/icon-192.png',
       tag: tag || 'kos-alarm',
       data: data || {},
       vibrate: [200, 100, 200],
