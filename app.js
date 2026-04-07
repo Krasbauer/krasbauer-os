@@ -816,6 +816,7 @@ function openTaskForm(editId, presetProjectId) {
         document.getElementById('tf-recurrence-group').style.display = '';
         selectChip('tf-recurrence-chips', task.recurrence || 'daily');
         document.getElementById('tf-routine-select').value = task.routineId || '';
+        document.getElementById('tf-recurring-time').value = task.preferredTime || '08:00';
       } else {
         document.getElementById('tf-recurrence-group').style.display = 'none';
       }
@@ -846,6 +847,7 @@ function openTaskForm(editId, presetProjectId) {
     document.getElementById('tf-status-group').style.display = 'none';
     document.getElementById('tf-recurrence-group').style.display = 'none';
     document.getElementById('tf-routine-select').value = '';
+    document.getElementById('tf-recurring-time').value = '08:00';
 
     selectChip('tf-domain-chips', appDomains.length > 0 ? appDomains[0].id : '');
     selectChip('tf-type-chips', 'one-off');
@@ -967,6 +969,7 @@ async function saveTaskForm() {
   var muted = document.getElementById('tf-muted').checked;
   var recurrence = type === 'recurring' ? (getSelectedChip('tf-recurrence-chips') || 'daily') : null;
   var routineId = type === 'recurring' ? (document.getElementById('tf-routine-select').value || null) : null;
+  var preferredTime = type === 'recurring' ? (document.getElementById('tf-recurring-time').value || '08:00') : null;
 
   var durChip = getSelectedChip('tf-duration-chips');
   var duration;
@@ -994,6 +997,7 @@ async function saveTaskForm() {
         task.muted = muted;
         task.recurrence = recurrence;
         task.routineId = routineId;
+        task.preferredTime = preferredTime;
         if (projectId) task.projectId = projectId;
         task.updatedAt = Date.now();
         await dbPut('tasks', task);
@@ -1013,6 +1017,7 @@ async function saveTaskForm() {
         muted: muted,
         recurrence: recurrence,
         routineId: routineId,
+        preferredTime: preferredTime,
         projectId: projectId,
         archived: false,
         rolloverCount: 0,
@@ -1247,14 +1252,28 @@ async function renderCalendar() {
     }
   }
 
+  // Group slots by routineId for rendering routine blocks
+  var routineSlots = {};
+  var nonRoutineSlots = [];
+  daySlots.forEach(function(slot) {
+    if (slot.routineId) {
+      if (!routineSlots[slot.routineId]) {
+        routineSlots[slot.routineId] = [];
+      }
+      routineSlots[slot.routineId].push(slot);
+    } else {
+      nonRoutineSlots.push(slot);
+    }
+  });
+
   for (var h = wakeHour; h < sleepHour; h++) {
     var label = (h < 10 ? '0' : '') + h + ':00';
     gridHtml += '<div class="cal-hour-row" data-hour="' + h + '">' +
       '<div class="cal-hour-label">' + label + '</div>' +
       '<div class="cal-hour-slots" onclick="onSlotTap(\'' + selectedStr + '\',' + h + ')">';
 
-    // Render task blocks for this hour
-    daySlots.forEach(function(slot) {
+    // Render non-routine task blocks for this hour (routine blocks rendered separately below)
+    nonRoutineSlots.forEach(function(slot) {
       if (slot.startHour === h && slotTaskMap[slot.id]) {
         var info = slotTaskMap[slot.id];
         var color = info.domain ? info.domain.color : '#555';
@@ -1268,6 +1287,42 @@ async function renderCalendar() {
           '<div class="cal-block-title" style="color:' + color + '">' + escapeHtml(info.task.title) + '</div>' +
           '<div class="cal-block-time">' + formatSlotTime(slot.startHour, slot.startMin) + ' – ' + formatSlotTime(slot.endHour, slot.endMin) + '</div>' +
           (slot.anchored ? '<div class="cal-block-pin">📌</div>' : '') +
+        '</div>';
+      }
+    });
+
+    gridHtml += '</div></div>';
+  }
+
+  // Render routine blocks overlaid on the grid
+  for (var rId in routineSlots) {
+    var rSlots = routineSlots[rId];
+    var routine = appRoutines.find(function(r) { return r.id === rId; });
+
+    // Find min and max times in this routine
+    var minStart = Math.min.apply(null, rSlots.map(function(s) { return s.startHour * 60 + s.startMin; }));
+    var maxEnd = Math.max.apply(null, rSlots.map(function(s) { return s.endHour * 60 + s.endMin; }));
+    var blockStartHour = Math.floor(minStart / 60);
+    var totalMinutes = maxEnd - minStart;
+
+    // Position within the grid (rough calculation)
+    var topPx = ((blockStartHour - wakeHour) * 60) + (minStart % 60);
+    var heightPx = Math.max(28, (totalMinutes / 60) * 60);
+
+    gridHtml += '<div class="cal-routine-block" style="top:' + topPx + 'px;height:' + heightPx + 'px;" onclick="toggleRoutineBlock(this)">' +
+      '<div class="cal-routine-header">' +
+        '<div class="cal-routine-name">' + (routine ? routine.name : 'Routine') + '</div>' +
+        '<div class="cal-routine-dur">' + totalMinutes + 'min</div>' +
+      '</div>' +
+      '<div class="cal-routine-tasks">';
+
+    rSlots.forEach(function(slot) {
+      if (slotTaskMap[slot.id]) {
+        var info = slotTaskMap[slot.id];
+        var color = info.domain ? info.domain.color : '#555';
+        gridHtml += '<div class="cal-routine-task" onclick="event.stopPropagation();openTaskForm(\'' + info.task.id + '\')">' +
+          '<div class="crt-dot" style="background:' + color + '"></div>' +
+          '<div>' + escapeHtml(info.task.title) + ' <span style="color:var(--text-tertiary);">(' + formatSlotTime(slot.startHour, slot.startMin) + '–' + formatSlotTime(slot.endHour, slot.endMin) + ')</span></div>' +
         '</div>';
       }
     });
@@ -1291,6 +1346,10 @@ async function renderCalendar() {
 
 function formatSlotTime(h, m) {
   return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + (m || 0);
+}
+
+function toggleRoutineBlock(elem) {
+  elem.classList.toggle('expanded');
 }
 
 function calSelectDay(dateStr) {
@@ -1983,17 +2042,27 @@ async function generateRecurringSlots(startDate, endDate) {
         var exists = allSlots.some(function(s) { return s.taskId === task.id && s.date === ds; });
 
         if (!exists) {
-          // Determine start time from routine or default
+          // Determine start time from preferredTime, routine, or default
           var startH = 8;
           var startM = 0;
-          if (task.routineId) {
+
+          // First check if task has a preferred time
+          if (task.preferredTime) {
+            var pParts = task.preferredTime.split(':');
+            startH = parseInt(pParts[0]) || 8;
+            startM = parseInt(pParts[1]) || 0;
+          } else if (task.routineId) {
+            // If no preferred time but has routine, use routine's start time
             var routine = appRoutines.find(function(r) { return r.id === task.routineId; });
             if (routine && routine.startTime) {
               var rParts = routine.startTime.split(':');
               startH = parseInt(rParts[0]) || 8;
               startM = parseInt(rParts[1]) || 0;
             }
-            // Offset by tasks already in this routine for this date
+          }
+
+          // Offset by tasks already in this routine for this date
+          if (task.routineId) {
             var routineTasks = allSlots.filter(function(s) {
               return s.date === ds && s.routineId === task.routineId;
             });
@@ -2265,6 +2334,7 @@ if ('serviceWorker' in navigator) {
    SETTINGS PANEL
    ═══════════════════════════════════════════ */
 document.getElementById('settings-btn').addEventListener('click', openSettings);
+document.getElementById('refresh-btn').addEventListener('click', refreshAllData);
 
 function openSettings() {
   document.getElementById('settings-overlay').classList.add('open');
@@ -3131,6 +3201,27 @@ document.addEventListener('click', function() {
     });
   }
 }, { once: true });
+
+/* ═══════════════════════════════════════════
+   REFRESH DATA
+   ═══════════════════════════════════════════ */
+async function refreshAllData() {
+  try {
+    await loadAllTasks();
+    await loadAllProjects();
+    await loadRoutines();
+    await loadSettings();
+    await loadDomains();
+    await renderCalendar();
+    renderDashboardToday();
+    renderDashboardOverview();
+    await applyFilters();
+    showToast('Data refreshed');
+  } catch (err) {
+    console.error('[refreshAllData]', err);
+    showToast('Refresh failed — try again');
+  }
+}
 
 /* ═══════════════════════════════════════════
    ONBOARDING — Phase 10

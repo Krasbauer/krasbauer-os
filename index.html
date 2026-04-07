@@ -41,6 +41,12 @@
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
       </button>
+      <button class="header-btn" id="refresh-btn" aria-label="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"></path>
+          <path d="M20.49 15a9 9 0 1 1-2-8.83"></path>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -441,6 +447,10 @@
           <select id="tf-routine-select" class="field-text-input" style="padding:10px 12px;">
             <option value="">None</option>
           </select>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="field-label">Preferred Start Time</div>
+          <input type="time" id="tf-recurring-time" class="field-text-input" value="08:00" style="padding:10px 12px;">
         </div>
       </div>
 
