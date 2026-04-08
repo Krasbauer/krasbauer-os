@@ -1612,7 +1612,7 @@ textarea.field-text-input {
 
 .cal-hour-row {
   display: flex;
-  min-height: 120px;
+  min-height: 160px;
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
 }
@@ -1631,7 +1631,7 @@ textarea.field-text-input {
 .cal-hour-slots {
   flex: 1;
   position: relative;
-  min-height: 120px;
+  min-height: 160px;
   cursor: pointer;
 }
 

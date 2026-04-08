@@ -1,8 +1,17 @@
 /* ═══════════════════════════════════════════
    INDEXEDDB — DATA LAYER
    ═══════════════════════════════════════════ */
-var APP_VERSION = '1.0.5';
+var APP_VERSION = '1.0.6';
 var PATCHNOTES = [
+  {
+    version: '1.0.6',
+    date: '2026-04-08',
+    changes: [
+      'Fixed calendar task overlap bug — tasks now use continuous minute-based positioning',
+      'Increased calendar hour height to 160px for better visual spacing',
+      'Removed forced minimum block height that caused short tasks to collide'
+    ]
+  },
   {
     version: '1.0.5',
     date: '2026-04-08',
@@ -242,6 +251,9 @@ function genId() {
 var appDomains = [];
 var appSettings = {};
 var allTasks = [];
+
+var CAL_HOUR_HEIGHT = 160;
+var CAL_MINUTE_HEIGHT = CAL_HOUR_HEIGHT / 60;
 
 async function loadAllTasks() {
   allTasks = await dbGetAll('tasks');
@@ -1418,9 +1430,9 @@ async function renderCalendar() {
         var info = slotTaskMap[slot.id];
         var color = info.domain ? info.domain.color : '#555';
         var dur = info.task.duration || 30;
-        var heightPx = Math.max(28, (dur / 60) * 120); // 120px per hour (2px/min)
+        var heightPx = Math.max(12, (dur / 60) * CAL_HOUR_HEIGHT);
         var blockStartMin = slot.startMin || 0;
-        var blockTopPx = (blockStartMin / 60) * 120;
+        var blockTopPx = (blockStartMin / 60) * CAL_HOUR_HEIGHT;
         var isDone = info.task.status === 'done';
 
         gridHtml += '<div class="cal-block' + (isDone ? ' is-done' : '') + '" ' +
@@ -1451,7 +1463,7 @@ async function renderCalendar() {
     if (isNowInRange) {
       var offsetHour = (sleepHour > wakeHour) ? (nowHour - wakeHour) :
                        (nowHour >= wakeHour) ? (nowHour - wakeHour) : (24 - wakeHour + nowHour);
-      var topPx = (offsetHour * 120) + (nowMin * 2);
+      var topPx = (offsetHour * CAL_HOUR_HEIGHT) + (nowMin * CAL_MINUTE_HEIGHT);
       gridHtml += '<div class="cal-now-line" style="top:' + topPx + 'px;"></div>';
     }
   }
@@ -1473,7 +1485,7 @@ function calSelectDay(dateStr) {
 function onSlotTap(event, dateStr, hour) {
   var rect = event.currentTarget.getBoundingClientRect();
   var yOffset = event.clientY - rect.top;
-  var startMin = Math.min(45, Math.floor((yOffset / 120) * 60 / 15) * 15);
+  var startMin = Math.min(45, Math.floor((yOffset / CAL_HOUR_HEIGHT) * 60 / 15) * 15);
   calSlotTarget = { date: dateStr, hour: hour, startMin: startMin };
   openSlotPicker(dateStr, hour, startMin);
 }
