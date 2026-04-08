@@ -1,8 +1,20 @@
 /* ═══════════════════════════════════════════
    INDEXEDDB — DATA LAYER
    ═══════════════════════════════════════════ */
-var APP_VERSION = '1.0.6';
+var APP_VERSION = '1.0.7';
 var PATCHNOTES = [
+  {
+    version: '1.0.7',
+    date: '2026-04-08',
+    changes: [
+      'Fixed XSS vulnerability — domain names and icons now safely escaped in all render locations',
+      'Fixed calendar date race condition — day selection is now atomic (async)',
+      'Domain activity bars now reliably update after every task change',
+      'Alarm deletion errors are now logged instead of silently ignored',
+      'All background intervals (greeting, calendar, alarms, rituals) are now cleared on app close — reduces battery drain',
+      'Added global error handler — async failures are now caught and surfaced to the user'
+    ]
+  },
   {
     version: '1.0.6',
     date: '2026-04-08',
@@ -251,6 +263,7 @@ function genId() {
 var appDomains = [];
 var appSettings = {};
 var allTasks = [];
+var _timers = {};
 
 var CAL_HOUR_HEIGHT = 160;
 var CAL_MINUTE_HEIGHT = CAL_HOUR_HEIGHT / 60;
@@ -277,7 +290,7 @@ async function initApp() {
     appSettings = await dbGet('settings', 'main');
 
     // Render UI
-    renderDomainBars();
+    await renderDomainBars();
     renderSettingsDomainList();
     renderDomainFilterPills();
     loadSettingsUI();
@@ -315,6 +328,12 @@ if ('serviceWorker' in navigator) {
     window.location.reload();
   });
 }
+
+// Catch any async errors not wrapped in try/catch (swipe handlers, SW callbacks, etc.)
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('[UNHANDLED REJECTION]', event.reason);
+  showToast('Something went wrong — try again');
+});
 
 async function checkForAppUpdate() {
   if (!swRegistration) { showToast('Service worker not ready'); return; }
@@ -499,7 +518,7 @@ function updateGreeting() {
     greeting + ', <span>Krasbauer</span>';
 }
 
-setInterval(updateGreeting, 60000);
+_timers.greeting = setInterval(updateGreeting, 60000);
 
 /* ═══════════════════════════════════════════
    DASHBOARD — Today's Agenda + Overcommitment
@@ -618,7 +637,7 @@ async function renderDomainBars() {
     html += '<div class="domain-bar-row">' +
       '<div class="domain-bar-label">' +
         '<span class="domain-dot" style="background:' + d.color + '"></span>' +
-        d.name +
+        escapeHtml(d.name) +
       '</div>' +
       '<div class="domain-bar-track">' +
         '<div class="domain-bar-fill" style="width:' + pct + '%;background:' + d.color + '"></div>' +
@@ -698,7 +717,7 @@ function renderDomainFilterPills() {
   if (!container) return;
   var html = '<button class="filter-pill active" onclick="setDomainFilter(\'all\',this)">All Domains</button>';
   appDomains.forEach(function(d) {
-    html += '<button class="filter-pill" onclick="setDomainFilter(\'' + d.id + '\',this)">' + d.icon + ' ' + d.name + '</button>';
+    html += '<button class="filter-pill" onclick="setDomainFilter(\'' + d.id + '\',this)">' + escapeHtml(d.icon) + ' ' + escapeHtml(d.name) + '</button>';
   });
   container.innerHTML = html;
 }
@@ -901,7 +920,7 @@ async function archiveTask(taskId) {
     await dbPut('tasks', task);
     await loadAllTasks();
     await renderTaskList();
-    renderDomainBars();
+    await renderDomainBars();
     showToast(task.archived ? 'Task archived' : 'Task unarchived');
   } catch (err) {
     console.error('[archiveTask]', err);
@@ -928,7 +947,7 @@ async function toggleTaskDone(taskId) {
     await renderTaskList();
     await renderDashboardToday();
     await renderCalendar();
-    renderDomainBars();
+    await renderDomainBars();
   } catch (err) {
     console.error('[toggleTaskDone]', err);
     showToast('Action failed — try again');
@@ -1020,7 +1039,7 @@ function renderDomainChips() {
   var html = '';
   appDomains.forEach(function(d) {
     html += '<button class="chip-option domain-chip" data-value="' + d.id + '" ' +
-      'style="--dc:' + d.color + '">' + d.icon + ' ' + d.name + '</button>';
+      'style="--dc:' + d.color + '">' + escapeHtml(d.icon) + ' ' + escapeHtml(d.name) + '</button>';
   });
   container.innerHTML = html;
   initChipSelector('tf-domain-chips');
@@ -1192,7 +1211,7 @@ async function saveTaskForm() {
     await renderTaskList();
     await renderCalendar();
     await renderDashboardToday();
-    renderDomainBars();
+    await renderDomainBars();
     // If task belongs to a project, refresh the project detail
     if (projectId && document.getElementById('proj-overlay').classList.contains('open')) {
       await renderProjectDetail(projectId);
@@ -1224,7 +1243,7 @@ async function deleteCurrentTask() {
     await renderTaskList();
     await renderCalendar();
     await renderDashboardToday();
-    renderDomainBars();
+    await renderDomainBars();
     showToast('Task deleted');
   } catch (err) {
     console.error('[deleteCurrentTask]', err);
@@ -1475,10 +1494,10 @@ function formatSlotTime(h, m) {
   return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + (m || 0);
 }
 
-function calSelectDay(dateStr) {
+async function calSelectDay(dateStr) {
   var parts = dateStr.split('-');
   calDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-  renderCalendar();
+  await renderCalendar();
 }
 
 /* ─── Slot tap → open picker ─── */
@@ -1618,11 +1637,12 @@ async function removeSlot(slotId) {
 }
 
 /* ─── Update now line every minute ─── */
-setInterval(function() {
+_timers.calNow = setInterval(async function() {
   var todayStr = calDateStr(new Date());
   var selectedStr = calDateStr(calDate);
   if (todayStr === selectedStr) {
-    renderCalendar();
+    try { await renderCalendar(); }
+    catch(e) { console.error('[calNow interval]', e); }
   }
 }, 60000);
 
@@ -1958,7 +1978,7 @@ async function commitShutdownRitual() {
   await renderTaskList();
   await renderCalendar();
   await renderDashboardToday();
-  renderDomainBars();
+  await renderDomainBars();
   showToast(incomplete.length > 0 ? incomplete.length + ' tasks rolled to tomorrow' : 'Perfect day! All done.');
 }
 
@@ -1996,7 +2016,7 @@ function updateRitualCards() {
 
 // Check ritual card visibility on load and every minute
 setTimeout(updateRitualCards, 1500);
-setInterval(updateRitualCards, 60000);
+_timers.ritual = setInterval(updateRitualCards, 60000);
 
 /* ═══════════════════════════════════════════
    RECURRING TASKS
@@ -2133,7 +2153,7 @@ async function scheduleAlarmsForSlot(slot, task) {
 async function removeAlarmsForSlot(slotId) {
   var ids = ['start-' + slotId, 'end-' + slotId];
   for (var i = 0; i < ids.length; i++) {
-    try { await dbDelete('alarms', ids[i]); } catch(e) {}
+    try { await dbDelete('alarms', ids[i]); } catch(e) { console.error('[removeAlarmsForSlot] Failed to delete alarm:', e); }
   }
 }
 
@@ -2288,11 +2308,16 @@ async function updateCalBadge() {
 }
 
 // Start alarm checker
-setInterval(checkAlarms, 30000);
+_timers.alarms = setInterval(checkAlarms, 30000);
 // Initial check after a short delay
 setTimeout(checkAlarms, 3000);
 // Schedule ritual alarm on boot
 setTimeout(scheduleRitualAlarm, 2000);
+
+// Clear all intervals when app is backgrounded / closed (prevents battery drain)
+window.addEventListener('pagehide', function() {
+  Object.keys(_timers).forEach(function(key) { clearInterval(_timers[key]); });
+});
 
 /* ─── Handle SW messages ─── */
 if ('serviceWorker' in navigator) {
@@ -2357,7 +2382,7 @@ function renderSettingsDomainList() {
       '<input type="color" class="domain-color-picker" value="' + d.color + '" ' +
         'onchange="quickUpdateDomainColor(\'' + d.id + '\', this.value)">' +
       '<div class="domain-item-info">' +
-        '<div class="domain-item-name">' + d.icon + ' ' + d.name + '</div>' +
+        '<div class="domain-item-name">' + escapeHtml(d.icon) + ' ' + escapeHtml(d.name) + '</div>' +
         '<div class="domain-item-icon">Alert after ' + d.alertDays + ' days</div>' +
       '</div>' +
       '<div class="domain-item-actions">' +
@@ -2376,7 +2401,7 @@ async function quickUpdateDomainColor(domainId, newColor) {
   if (domain) {
     domain.color = newColor;
     await dbPut('domains', domain);
-    renderDomainBars();
+    await renderDomainBars();
     showToast('Color updated');
   }
 }
@@ -2460,7 +2485,7 @@ async function saveDomain() {
   appDomains = await dbGetAll('domains');
   appDomains.sort(function(a, b) { return a.order - b.order; });
   renderSettingsDomainList();
-  renderDomainBars();
+  await renderDomainBars();
   closeDomainModal();
 }
 
@@ -2481,7 +2506,7 @@ async function deleteDomain(domainId) {
   }
 
   renderSettingsDomainList();
-  renderDomainBars();
+  await renderDomainBars();
   showToast('Domain deleted');
 }
 
@@ -2777,7 +2802,7 @@ async function toggleSubtaskDone(taskId, projectId) {
     await loadAllTasks();
     await renderProjectDetail(projectId);
     await renderProjectList();
-    renderDomainBars();
+    await renderDomainBars();
   } catch (err) {
     console.error('[toggleSubtaskDone]', err);
     showToast('Action failed — try again');
@@ -2793,7 +2818,7 @@ function openProjectModal(editId) {
   var chipsContainer = document.getElementById('proj-domain-chips');
   var html = '';
   appDomains.forEach(function(d) {
-    html += '<button class="chip-option" data-value="' + d.id + '" style="--dc:' + d.color + '">' + d.icon + ' ' + d.name + '</button>';
+    html += '<button class="chip-option" data-value="' + d.id + '" style="--dc:' + d.color + '">' + escapeHtml(d.icon) + ' ' + escapeHtml(d.name) + '</button>';
   });
   chipsContainer.innerHTML = html;
   initChipSelector('proj-domain-chips');
@@ -3077,7 +3102,7 @@ async function confirmImport() {
     appSettings = await dbGet('settings', 'main');
     await loadAllTasks();
 
-    renderDomainBars();
+    await renderDomainBars();
     renderSettingsDomainList();
     loadSettingsUI();
     await renderTaskList();
@@ -3176,7 +3201,7 @@ async function confirmResetData() {
     appDomains.sort(function(a, b) { return a.order - b.order; });
     appSettings = await dbGet('settings', 'main');
     await loadAllTasks();
-    renderDomainBars();
+    await renderDomainBars();
     renderSettingsDomainList();
     loadSettingsUI();
     showToast('All data reset');
@@ -3228,7 +3253,7 @@ async function refreshAllData() {
     appDomains.sort(function(a, b) { return a.order - b.order; });
     await renderCalendar();
     await renderDashboardToday();
-    renderDomainBars();
+    await renderDomainBars();
     await applyFilters();
     showToast('Data refreshed');
   } catch (err) {
