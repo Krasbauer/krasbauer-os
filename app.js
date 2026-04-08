@@ -3236,11 +3236,12 @@ async function refreshAllData() {
     await loadAllTasks();
     await loadProjects();
     await loadRoutines();
-    await loadSettings();
-    await loadDomains();
+    appSettings = await dbGet('settings', 'main');
+    appDomains = await dbGetAll('domains');
+    appDomains.sort(function(a, b) { return a.order - b.order; });
     await renderCalendar();
-    renderDashboardToday();
-    renderDashboardOverview();
+    await renderDashboardToday();
+    renderDomainBars();
     await applyFilters();
     showToast('Data refreshed');
   } catch (err) {
