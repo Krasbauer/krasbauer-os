@@ -1,8 +1,15 @@
 /* ═══════════════════════════════════════════
    INDEXEDDB — DATA LAYER
    ═══════════════════════════════════════════ */
-var APP_VERSION = '1.0.2';
+var APP_VERSION = '1.0.3';
 var PATCHNOTES = [
+  {
+    version: '1.0.3',
+    date: '2026-04-08',
+    changes: [
+      'Replaced all time pickers with 24h text inputs (HH:MM) — no more AM/PM on Android'
+    ]
+  },
   {
     version: '1.0.2',
     date: '2026-04-08',
@@ -3149,9 +3156,9 @@ function renderOnboardingStep() {
       '<div class="onboarding-tagline">Set your schedule</div>' +
       '<div class="onboarding-desc">KrasbauerOS uses these times to build your day.</div>' +
       '<div class="onboarding-schedule-form">' +
-        '<div class="form-row"><span class="form-label">Wake time</span><input type="time" id="ob-wake" value="' + wake + '" class="form-input"></div>' +
-        '<div class="form-row"><span class="form-label">Sleep time</span><input type="time" id="ob-sleep" value="' + sleep + '" class="form-input"></div>' +
-        '<div class="form-row"><span class="form-label">Shutdown alarm</span><input type="time" id="ob-ritual" value="' + ritual + '" class="form-input"></div>' +
+        '<div class="form-row"><span class="form-label">Wake time</span><input type="text" inputmode="numeric" placeholder="HH:MM" maxlength="5" id="ob-wake" value="' + wake + '" class="form-input"></div>' +
+        '<div class="form-row"><span class="form-label">Sleep time</span><input type="text" inputmode="numeric" placeholder="HH:MM" maxlength="5" id="ob-sleep" value="' + sleep + '" class="form-input"></div>' +
+        '<div class="form-row"><span class="form-label">Shutdown alarm</span><input type="text" inputmode="numeric" placeholder="HH:MM" maxlength="5" id="ob-ritual" value="' + ritual + '" class="form-input"></div>' +
       '</div>';
     footer.innerHTML =
       '<button class="ritual-btn ritual-btn-secondary" onclick="onboardingBack()">← Back</button>' +
