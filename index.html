@@ -33,7 +33,7 @@
 
   <!-- ═══ HEADER ═══ -->
   <header id="app-header">
-    <div class="logo">KrasbauerOS <span class="version-badge">v10.5</span></div>
+    <div class="logo">KrasbauerOS <span class="version-badge" id="header-version-badge"></span></div>
     <div class="header-actions">
       <button class="header-btn" id="settings-btn" aria-label="Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -443,12 +443,6 @@
           <button class="chip-option" data-value="weekdays">Weekdays</button>
         </div>
         <div style="margin-top:10px;">
-          <div class="field-label">Part of Routine (optional)</div>
-          <select id="tf-routine-select" class="field-text-input" style="padding:10px 12px;">
-            <option value="">None</option>
-          </select>
-        </div>
-        <div style="margin-top:10px;">
           <div class="field-label">Preferred Start Time</div>
           <input type="time" id="tf-recurring-time" class="field-text-input" value="08:00" style="padding:10px 12px;">
         </div>
@@ -525,15 +519,6 @@
         <button class="add-domain-btn" onclick="openDomainModal()">+ Add Domain</button>
       </div>
 
-      <!-- Routines -->
-      <div class="settings-section">
-        <p class="settings-section-title">Routine Blocks</p>
-        <div id="routine-list">
-          <!-- Populated by JS -->
-        </div>
-        <button class="add-domain-btn" onclick="openRoutineModal()">+ Add Routine</button>
-      </div>
-
       <!-- Data -->
       <div class="settings-section">
         <p class="settings-section-title">Data</p>
@@ -552,12 +537,19 @@
       <!-- About -->
       <div class="settings-section">
         <p class="settings-section-title">About</p>
-        <div style="font-size: 12px; color: var(--text-tertiary); line-height: 1.6;">
-          <strong style="color: var(--text-secondary);">KrasbauerOS</strong> — Phase 10.5<br>
+        <div style="font-size: 12px; color: var(--text-tertiary); line-height: 1.8;">
+          <strong style="color: var(--text-secondary);">KrasbauerOS</strong>
+          <span id="app-version-label" style="color: var(--accent); font-family: 'Orbitron', monospace;"></span><br>
           Cache: <span id="cache-version-label" style="color: var(--text-secondary); font-family: 'Orbitron', monospace;">—</span><br>
           Data stored locally on this device via IndexedDB.<br>
           Export regularly to avoid data loss.
         </div>
+      </div>
+
+      <!-- Patchnotes -->
+      <div class="settings-section">
+        <p class="settings-section-title">Patchnotes</p>
+        <div id="patchnotes-list"></div>
       </div>
 
     </div>
@@ -590,34 +582,6 @@
       <div class="modal-actions">
         <button class="modal-cancel" onclick="closeDomainModal()">Cancel</button>
         <button class="modal-save" onclick="saveDomain()">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ ROUTINE EDIT MODAL ═══ -->
-  <div class="modal-backdrop" id="routine-modal">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <p class="modal-title" id="routine-modal-title">Add Routine</p>
-      <input type="hidden" id="routine-edit-id">
-      <div class="modal-field">
-        <label>Routine Name</label>
-        <input type="text" id="routine-edit-name" placeholder="e.g. Morning Routine">
-      </div>
-      <div class="modal-field">
-        <label>Schedule</label>
-        <div class="chip-selector" id="routine-sched-chips">
-          <button class="chip-option selected" data-value="daily">Daily</button>
-          <button class="chip-option" data-value="weekdays">Weekdays</button>
-          <button class="chip-option" data-value="weekly">Weekly</button>
-        </div>
-      </div>
-      <div class="modal-field">
-        <label>Start Time</label>
-        <input type="time" class="form-input" id="routine-edit-time" value="06:00">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-cancel" onclick="closeRoutineModal()">Cancel</button>
-        <button class="modal-save" onclick="saveRoutine()">Save</button>
       </div>
     </div>
   </div>

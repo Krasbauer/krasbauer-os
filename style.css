@@ -1839,84 +1839,6 @@ textarea.field-text-input {
 }
 
 /* ═══════════════════════════════════════════
-   ROUTINE BLOCKS ON CALENDAR
-   ═══════════════════════════════════════════ */
-.cal-routine-block {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  border-radius: 10px;
-  border: 1px dashed rgba(59,130,246,0.4);
-  background: rgba(59,130,246,0.06);
-  z-index: 1;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.cal-routine-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  background: rgba(59,130,246,0.1);
-}
-
-.cal-routine-name {
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-accent);
-}
-
-.cal-routine-dur {
-  font-size: 10px;
-  color: var(--text-tertiary);
-}
-
-.cal-routine-tasks {
-  padding: 4px 6px;
-  display: none;
-}
-
-.cal-routine-block.expanded .cal-routine-tasks {
-  display: block;
-}
-
-.cal-routine-task {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.cal-routine-task .crt-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-/* Routine items in settings */
-.routine-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  margin-bottom: 8px;
-}
-
-.routine-item-info { flex: 1; min-width: 0; }
-.routine-item-name { font-size: 14px; color: var(--text-primary); font-weight: 500; }
-.routine-item-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
-
-/* ═══════════════════════════════════════════
    SETTINGS PANEL (slide-over)
    ═══════════════════════════════════════════ */
 #settings-overlay {
@@ -2992,4 +2914,14 @@ textarea.field-text-input {
   color: var(--text-primary); margin-bottom: 6px;
 }
 .onboarding-ready-sub { font-size: 13px; color: var(--text-secondary); max-width: 260px; }
+
+/* ═══════════════════════════════════════════
+   PATCHNOTES
+   ═══════════════════════════════════════════ */
+.patchnote-entry { margin-bottom: 16px; }
+.patchnote-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.patchnote-version { font-family: 'Orbitron', monospace; font-size: 12px; color: var(--accent); font-weight: 600; }
+.patchnote-date { font-size: 11px; color: var(--text-tertiary); }
+.patchnote-changes { margin: 0; padding-left: 16px; }
+.patchnote-changes li { font-size: 12px; color: var(--text-tertiary); line-height: 1.6; margin-bottom: 2px; }
 

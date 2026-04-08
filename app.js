@@ -1,6 +1,36 @@
 /* ═══════════════════════════════════════════
    INDEXEDDB — DATA LAYER
    ═══════════════════════════════════════════ */
+var APP_VERSION = '1.0.2';
+var PATCHNOTES = [
+  {
+    version: '1.0.2',
+    date: '2026-04-08',
+    changes: [
+      'Fixed calendar last hour stuck at 22:00 when sleep time is 00:00',
+      'Removed routine blocks — recurring tasks now use preferred time directly',
+      'Added patchnotes system — version visible in header and Settings'
+    ]
+  },
+  {
+    version: '1.0.1',
+    date: '2026-04-08',
+    changes: [
+      'Fixed refresh button calling non-existent functions',
+      'Added live cache version display in Settings'
+    ]
+  },
+  {
+    version: '1.0.0',
+    date: '2026-04-01',
+    changes: [
+      'Phase 10.5: Recurring task preferred start time',
+      'Refresh button in header',
+      'Automated SW cache version bumping'
+    ]
+  }
+];
+
 var DB_NAME = 'KrasbauerOS';
 var DB_VERSION = 1;
 var db = null;
@@ -218,9 +248,7 @@ async function initApp() {
     loadSettingsUI();
     if (!localStorage.getItem('kos-onboarded')) showOnboarding();
     updateGreeting();
-    await loadRoutines();
-    renderRoutineList();
-    populateRoutineSelect();
+    renderPatchnotes();
     await renderTaskList();
     await renderCalendar();
     await renderDashboardToday();
@@ -815,7 +843,6 @@ function openTaskForm(editId, presetProjectId) {
       if (task.type === 'recurring') {
         document.getElementById('tf-recurrence-group').style.display = '';
         selectChip('tf-recurrence-chips', task.recurrence || 'daily');
-        document.getElementById('tf-routine-select').value = task.routineId || '';
         document.getElementById('tf-recurring-time').value = task.preferredTime || '08:00';
       } else {
         document.getElementById('tf-recurrence-group').style.display = 'none';
@@ -846,7 +873,6 @@ function openTaskForm(editId, presetProjectId) {
     document.getElementById('tf-duration-custom').style.display = 'none';
     document.getElementById('tf-status-group').style.display = 'none';
     document.getElementById('tf-recurrence-group').style.display = 'none';
-    document.getElementById('tf-routine-select').value = '';
     document.getElementById('tf-recurring-time').value = '08:00';
 
     selectChip('tf-domain-chips', appDomains.length > 0 ? appDomains[0].id : '');
@@ -968,7 +994,6 @@ async function saveTaskForm() {
   var notes = document.getElementById('tf-notes').value.trim();
   var muted = document.getElementById('tf-muted').checked;
   var recurrence = type === 'recurring' ? (getSelectedChip('tf-recurrence-chips') || 'daily') : null;
-  var routineId = type === 'recurring' ? (document.getElementById('tf-routine-select').value || null) : null;
   var preferredTime = type === 'recurring' ? (document.getElementById('tf-recurring-time').value || '08:00') : null;
 
   var durChip = getSelectedChip('tf-duration-chips');
@@ -996,7 +1021,6 @@ async function saveTaskForm() {
         task.notes = notes;
         task.muted = muted;
         task.recurrence = recurrence;
-        task.routineId = routineId;
         task.preferredTime = preferredTime;
         if (projectId) task.projectId = projectId;
         task.updatedAt = Date.now();
@@ -1016,7 +1040,7 @@ async function saveTaskForm() {
         notes: notes,
         muted: muted,
         recurrence: recurrence,
-        routineId: routineId,
+        routineId: null,
         preferredTime: preferredTime,
         projectId: projectId,
         archived: false,
@@ -1177,7 +1201,9 @@ function getWakeHour() {
 
 function getSleepHour() {
   var t = (appSettings && appSettings.sleepTime) || '23:00';
-  return parseInt(t.split(':')[0]) || 23;
+  var h = parseInt(t.split(':')[0]);
+  if (isNaN(h)) return 23;
+  return h === 0 ? 24 : h;
 }
 
 /* ─── Main render ─── */
@@ -1252,20 +1278,6 @@ async function renderCalendar() {
     }
   }
 
-  // Group slots by routineId for rendering routine blocks
-  var routineSlots = {};
-  var nonRoutineSlots = [];
-  daySlots.forEach(function(slot) {
-    if (slot.routineId) {
-      if (!routineSlots[slot.routineId]) {
-        routineSlots[slot.routineId] = [];
-      }
-      routineSlots[slot.routineId].push(slot);
-    } else {
-      nonRoutineSlots.push(slot);
-    }
-  });
-
   // Generate hour list, handling sleep times that cross midnight
   var hours = [];
   if (sleepHour > wakeHour) {
@@ -1289,8 +1301,8 @@ async function renderCalendar() {
       '<div class="cal-hour-label">' + label + '</div>' +
       '<div class="cal-hour-slots" onclick="onSlotTap(\'' + selectedStr + '\',' + h + ')">';
 
-    // Render non-routine task blocks for this hour (routine blocks rendered separately below)
-    nonRoutineSlots.forEach(function(slot) {
+    // Render task blocks for this hour
+    daySlots.forEach(function(slot) {
       if (slot.startHour === h && slotTaskMap[slot.id]) {
         var info = slotTaskMap[slot.id];
         var color = info.domain ? info.domain.color : '#555';
@@ -1310,42 +1322,6 @@ async function renderCalendar() {
 
     gridHtml += '</div></div>';
   });
-
-  // Render routine blocks overlaid on the grid
-  for (var rId in routineSlots) {
-    var rSlots = routineSlots[rId];
-    var routine = appRoutines.find(function(r) { return r.id === rId; });
-
-    // Find min and max times in this routine
-    var minStart = Math.min.apply(null, rSlots.map(function(s) { return s.startHour * 60 + s.startMin; }));
-    var maxEnd = Math.max.apply(null, rSlots.map(function(s) { return s.endHour * 60 + s.endMin; }));
-    var blockStartHour = Math.floor(minStart / 60);
-    var totalMinutes = maxEnd - minStart;
-
-    // Position within the grid (rough calculation)
-    var topPx = ((blockStartHour - wakeHour) * 60) + (minStart % 60);
-    var heightPx = Math.max(28, (totalMinutes / 60) * 60);
-
-    gridHtml += '<div class="cal-routine-block" style="top:' + topPx + 'px;height:' + heightPx + 'px;" onclick="toggleRoutineBlock(this)">' +
-      '<div class="cal-routine-header">' +
-        '<div class="cal-routine-name">' + (routine ? routine.name : 'Routine') + '</div>' +
-        '<div class="cal-routine-dur">' + totalMinutes + 'min</div>' +
-      '</div>' +
-      '<div class="cal-routine-tasks">';
-
-    rSlots.forEach(function(slot) {
-      if (slotTaskMap[slot.id]) {
-        var info = slotTaskMap[slot.id];
-        var color = info.domain ? info.domain.color : '#555';
-        gridHtml += '<div class="cal-routine-task" onclick="event.stopPropagation();openTaskForm(\'' + info.task.id + '\')">' +
-          '<div class="crt-dot" style="background:' + color + '"></div>' +
-          '<div>' + escapeHtml(info.task.title) + ' <span style="color:var(--text-tertiary);">(' + formatSlotTime(slot.startHour, slot.startMin) + '–' + formatSlotTime(slot.endHour, slot.endMin) + ')</span></div>' +
-        '</div>';
-      }
-    });
-
-    gridHtml += '</div></div>';
-  }
 
   // Now-line for today
   if (selectedStr === todayStr) {
@@ -1372,10 +1348,6 @@ async function renderCalendar() {
 
 function formatSlotTime(h, m) {
   return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + (m || 0);
-}
-
-function toggleRoutineBlock(elem) {
-  elem.classList.toggle('expanded');
 }
 
 function calSelectDay(dateStr) {
@@ -1899,129 +1871,8 @@ setTimeout(updateRitualCards, 1500);
 setInterval(updateRitualCards, 60000);
 
 /* ═══════════════════════════════════════════
-   RECURRING TASKS & ROUTINE BLOCKS
+   RECURRING TASKS
    ═══════════════════════════════════════════ */
-var appRoutines = [];
-
-async function loadRoutines() {
-  appRoutines = await dbGetAll('routines');
-  appRoutines.sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
-}
-
-/* ─── Routine CRUD ─── */
-function renderRoutineList() {
-  var container = document.getElementById('routine-list');
-  if (!container) return;
-  if (appRoutines.length === 0) {
-    container.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0;">No routines yet.</div>';
-    return;
-  }
-  var html = '';
-  appRoutines.forEach(function(r) {
-    html += '<div class="routine-item">' +
-      '<div class="routine-item-info">' +
-        '<div class="routine-item-name">' + escapeHtml(r.name) + '</div>' +
-        '<div class="routine-item-meta">' + r.schedule + ' at ' + (r.startTime || '06:00') + '</div>' +
-      '</div>' +
-      '<div class="domain-item-actions">' +
-        '<button class="domain-edit-btn" onclick="openRoutineModal(\'' + r.id + '\')" title="Edit">✎</button>' +
-        '<button class="domain-delete-btn" onclick="deleteRoutine(\'' + r.id + '\')" title="Delete">✕</button>' +
-      '</div>' +
-    '</div>';
-  });
-  container.innerHTML = html;
-}
-
-function openRoutineModal(editId) {
-  var modal = document.getElementById('routine-modal');
-  var title = document.getElementById('routine-modal-title');
-
-  if (editId) {
-    var r = appRoutines.find(function(rr) { return rr.id === editId; });
-    if (!r) return;
-    title.textContent = 'Edit Routine';
-    document.getElementById('routine-edit-id').value = r.id;
-    document.getElementById('routine-edit-name').value = r.name;
-    document.getElementById('routine-edit-time').value = r.startTime || '06:00';
-    selectChip('routine-sched-chips', r.schedule || 'daily');
-  } else {
-    title.textContent = 'Add Routine';
-    document.getElementById('routine-edit-id').value = '';
-    document.getElementById('routine-edit-name').value = '';
-    document.getElementById('routine-edit-time').value = '06:00';
-    selectChip('routine-sched-chips', 'daily');
-  }
-  modal.classList.add('open');
-}
-
-function closeRoutineModal() {
-  document.getElementById('routine-modal').classList.remove('open');
-}
-
-initChipSelector('routine-sched-chips');
-
-async function saveRoutine() {
-  var editId = document.getElementById('routine-edit-id').value;
-  var name = document.getElementById('routine-edit-name').value.trim();
-  var schedule = getSelectedChip('routine-sched-chips') || 'daily';
-  var startTime = document.getElementById('routine-edit-time').value || '06:00';
-
-  if (!name) { showToast('Name is required'); return; }
-
-  if (editId) {
-    var r = appRoutines.find(function(rr) { return rr.id === editId; });
-    if (r) {
-      r.name = name;
-      r.schedule = schedule;
-      r.startTime = startTime;
-      await dbPut('routines', r);
-    }
-  } else {
-    var newRoutine = {
-      id: genId(),
-      name: name,
-      schedule: schedule,
-      startTime: startTime,
-      order: appRoutines.length
-    };
-    await dbPut('routines', newRoutine);
-  }
-
-  await loadRoutines();
-  renderRoutineList();
-  populateRoutineSelect();
-  closeRoutineModal();
-  showToast(editId ? 'Routine updated' : 'Routine added');
-}
-
-async function deleteRoutine(routineId) {
-  if (!confirm('Delete this routine?')) return;
-  await dbDelete('routines', routineId);
-  // Unlink tasks from this routine
-
-  for (var i = 0; i < allTasks.length; i++) {
-    if (allTasks[i].routineId === routineId) {
-      allTasks[i].routineId = null;
-      await dbPut('tasks', allTasks[i]);
-    }
-  }
-  await loadAllTasks();
-  await loadRoutines();
-  renderRoutineList();
-  populateRoutineSelect();
-  showToast('Routine deleted');
-}
-
-/* ─── Populate routine dropdown in task form ─── */
-function populateRoutineSelect() {
-  var sel = document.getElementById('tf-routine-select');
-  if (!sel) return;
-  var html = '<option value="">None</option>';
-  appRoutines.forEach(function(r) {
-    html += '<option value="' + r.id + '">' + escapeHtml(r.name) + '</option>';
-  });
-  sel.innerHTML = html;
-}
 
 /* ─── Show/hide recurrence fields based on task type ─── */
 function setupTypeToggle() {
@@ -2068,37 +1919,13 @@ async function generateRecurringSlots(startDate, endDate) {
         var exists = allSlots.some(function(s) { return s.taskId === task.id && s.date === ds; });
 
         if (!exists) {
-          // Determine start time from preferredTime, routine, or default
+          // Determine start time from preferredTime or default 08:00
           var startH = 8;
           var startM = 0;
-
-          // First check if task has a preferred time
           if (task.preferredTime) {
             var pParts = task.preferredTime.split(':');
             startH = parseInt(pParts[0]) || 8;
             startM = parseInt(pParts[1]) || 0;
-          } else if (task.routineId) {
-            // If no preferred time but has routine, use routine's start time
-            var routine = appRoutines.find(function(r) { return r.id === task.routineId; });
-            if (routine && routine.startTime) {
-              var rParts = routine.startTime.split(':');
-              startH = parseInt(rParts[0]) || 8;
-              startM = parseInt(rParts[1]) || 0;
-            }
-          }
-
-          // Offset by tasks already in this routine for this date
-          if (task.routineId) {
-            var routineTasks = allSlots.filter(function(s) {
-              return s.date === ds && s.routineId === task.routineId;
-            });
-            routineTasks.forEach(function(rs) {
-              var endM = rs.endHour * 60 + (rs.endMin || 0);
-              if (endM > startH * 60 + startM) {
-                startH = Math.floor(endM / 60);
-                startM = endM % 60;
-              }
-            });
           }
 
           var dur = task.duration || 30;
@@ -2117,8 +1944,7 @@ async function generateRecurringSlots(startDate, endDate) {
             endHour: endH,
             endMin: endMin,
             anchored: false,
-            domainColor: domain ? domain.color : '#555',
-            routineId: task.routineId || null
+            domainColor: domain ? domain.color : '#555'
           };
           await dbPut('calendar_slots', newSlot);
           allSlots.push(newSlot);
@@ -2366,6 +2192,7 @@ function openSettings() {
   document.getElementById('settings-overlay').classList.add('open');
   document.getElementById('settings-panel').classList.add('open');
   renderCacheVersion();
+  renderPatchnotes();
 }
 
 function closeSettings() {
@@ -3150,6 +2977,26 @@ async function renderCacheVersion() {
   }
 }
 
+function renderPatchnotes() {
+  var badge = document.getElementById('header-version-badge');
+  if (badge) badge.textContent = 'v' + APP_VERSION;
+  var aboutVer = document.getElementById('app-version-label');
+  if (aboutVer) aboutVer.textContent = ' v' + APP_VERSION;
+  var el = document.getElementById('patchnotes-list');
+  if (!el) return;
+  el.innerHTML = PATCHNOTES.map(function(entry) {
+    return '<div class="patchnote-entry">' +
+      '<div class="patchnote-header">' +
+        '<span class="patchnote-version">v' + entry.version + '</span>' +
+        '<span class="patchnote-date">' + entry.date + '</span>' +
+      '</div>' +
+      '<ul class="patchnote-changes">' +
+        entry.changes.map(function(c) { return '<li>' + escapeHtml(c) + '</li>'; }).join('') +
+      '</ul>' +
+    '</div>';
+  }).join('');
+}
+
 function renderBackupStatus() {
   var card = document.getElementById('backup-status-card');
   if (!card) return;
@@ -3248,7 +3095,6 @@ async function refreshAllData() {
   try {
     await loadAllTasks();
     await loadProjects();
-    await loadRoutines();
     appSettings = await dbGet('settings', 'main');
     appDomains = await dbGetAll('domains');
     appDomains.sort(function(a, b) { return a.order - b.order; });
@@ -3354,4 +3200,4 @@ async function completeOnboarding() {
    ═══════════════════════════════════════════ */
 initApp();
 
-console.log('%c KrasbauerOS v10.5 — Phase 10.5 ', 'background: #0a0a0f; color: #3B82F6; font-size: 14px; font-weight: bold; padding: 8px 12px; border: 1px solid #3B82F6; border-radius: 4px;');
+console.log('%c KrasbauerOS v' + APP_VERSION + ' ', 'background: #0a0a0f; color: #3B82F6; font-size: 14px; font-weight: bold; padding: 8px 12px; border: 1px solid #3B82F6; border-radius: 4px;');
