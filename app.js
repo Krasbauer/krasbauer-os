@@ -1,8 +1,17 @@
 /* ═══════════════════════════════════════════
    INDEXEDDB — DATA LAYER
    ═══════════════════════════════════════════ */
-var APP_VERSION = '1.0.4';
+var APP_VERSION = '1.0.5';
 var PATCHNOTES = [
+  {
+    version: '1.0.5',
+    date: '2026-04-08',
+    changes: [
+      'Calendar now uses 2px per minute — short tasks (5m, 15m) are correctly sized and positioned',
+      'Tapping an hour slot snaps to the nearest 15-minute mark (:00, :15, :30, :45)',
+      'Android back button now closes modals first, then navigates to dashboard, then warns before exit'
+    ]
+  },
   {
     version: '1.0.4',
     date: '2026-04-08',
@@ -269,6 +278,7 @@ async function initApp() {
     await renderProjectList();
     await checkMidnightRollover();
 
+    initBackButton();
     console.log('[App] Initialized — ' + appDomains.length + ' domains loaded');
   } catch (err) {
     console.error('[App] Init failed:', err);
@@ -349,6 +359,7 @@ function dismissInstall() {
 var tabs = ['dashboard', 'tasks', 'calendar', 'projects'];
 var tabBtns = document.querySelectorAll('.tab-btn');
 var tabBar = document.getElementById('tab-bar');
+var currentTab = 'dashboard';
 
 tabBtns.forEach(function(btn, index) {
   btn.addEventListener('click', function() {
@@ -357,12 +368,68 @@ tabBtns.forEach(function(btn, index) {
 });
 
 function switchTab(tabName, index) {
+  currentTab = tabName;
   tabBtns.forEach(function(b) { b.classList.remove('active'); });
   tabBtns[index].classList.add('active');
   tabBar.dataset.active = index;
   document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
   document.getElementById('panel-' + tabName).classList.add('active');
 }
+
+/* ═══════════════════════════════════════════
+   ANDROID BACK BUTTON (History API)
+   ═══════════════════════════════════════════ */
+var _exitWarning = false;
+var _exitWarningTimer = null;
+
+function initBackButton() {
+  history.replaceState({ kos: 'base' }, '');
+  history.pushState({ kos: 'guard' }, '');
+}
+
+function closeTopOpenModal() {
+  if (document.getElementById('task-form-backdrop').classList.contains('open')) {
+    closeTaskForm();
+    return true;
+  }
+  if (document.getElementById('slot-picker-backdrop').classList.contains('open')) {
+    closeSlotPicker();
+    return true;
+  }
+  if (document.getElementById('ritual-overlay').classList.contains('open')) {
+    closeRitual();
+    return true;
+  }
+  if (document.getElementById('proj-overlay').classList.contains('open')) {
+    closeProjectDetail();
+    return true;
+  }
+  if (document.getElementById('settings-overlay').classList.contains('open')) {
+    closeSettings();
+    return true;
+  }
+  return false;
+}
+
+window.addEventListener('popstate', function() {
+  if (closeTopOpenModal()) {
+    history.pushState({ kos: 'guard' }, '');
+    return;
+  }
+  if (currentTab !== 'dashboard') {
+    switchTab('dashboard', 0);
+    history.pushState({ kos: 'guard' }, '');
+    return;
+  }
+  if (!_exitWarning) {
+    _exitWarning = true;
+    clearTimeout(_exitWarningTimer);
+    showToast('Press back again to exit');
+    history.pushState({ kos: 'guard' }, '');
+    _exitWarningTimer = setTimeout(function() { _exitWarning = false; }, 2500);
+  }
+  // second press: don't re-push → browser exits
+});
 
 /* ═══════════════════════════════════════════
    DASHBOARD SWIPE
@@ -1343,7 +1410,7 @@ async function renderCalendar() {
     var label = (h < 10 ? '0' : '') + h + ':00';
     gridHtml += '<div class="cal-hour-row" data-hour="' + h + '">' +
       '<div class="cal-hour-label">' + label + '</div>' +
-      '<div class="cal-hour-slots" onclick="onSlotTap(\'' + selectedStr + '\',' + h + ')">';
+      '<div class="cal-hour-slots" onclick="onSlotTap(event,\'' + selectedStr + '\',' + h + ')">';
 
     // Render task blocks for this hour
     daySlots.forEach(function(slot) {
@@ -1351,11 +1418,13 @@ async function renderCalendar() {
         var info = slotTaskMap[slot.id];
         var color = info.domain ? info.domain.color : '#555';
         var dur = info.task.duration || 30;
-        var heightPx = Math.max(28, (dur / 60) * 60); // 60px per hour
+        var heightPx = Math.max(28, (dur / 60) * 120); // 120px per hour (2px/min)
+        var blockStartMin = slot.startMin || 0;
+        var blockTopPx = (blockStartMin / 60) * 120;
         var isDone = info.task.status === 'done';
 
         gridHtml += '<div class="cal-block' + (isDone ? ' is-done' : '') + '" ' +
-          'style="top:0;height:' + heightPx + 'px;background:' + color + '33;border-color:' + color + '44;" ' +
+          'style="top:' + blockTopPx + 'px;height:' + heightPx + 'px;background:' + color + '33;border-color:' + color + '44;" ' +
           'onclick="event.stopPropagation();openTaskForm(\'' + info.task.id + '\')">' +
           '<div class="cal-block-title" style="color:' + color + '">' + escapeHtml(info.task.title) + '</div>' +
           '<div class="cal-block-time">' + formatSlotTime(slot.startHour, slot.startMin) + ' – ' + formatSlotTime(slot.endHour, slot.endMin) + '</div>' +
@@ -1382,7 +1451,7 @@ async function renderCalendar() {
     if (isNowInRange) {
       var offsetHour = (sleepHour > wakeHour) ? (nowHour - wakeHour) :
                        (nowHour >= wakeHour) ? (nowHour - wakeHour) : (24 - wakeHour + nowHour);
-      var topPx = (offsetHour * 60) + nowMin;
+      var topPx = (offsetHour * 120) + (nowMin * 2);
       gridHtml += '<div class="cal-now-line" style="top:' + topPx + 'px;"></div>';
     }
   }
@@ -1401,15 +1470,18 @@ function calSelectDay(dateStr) {
 }
 
 /* ─── Slot tap → open picker ─── */
-function onSlotTap(dateStr, hour) {
-  calSlotTarget = { date: dateStr, hour: hour };
-  openSlotPicker(dateStr, hour);
+function onSlotTap(event, dateStr, hour) {
+  var rect = event.currentTarget.getBoundingClientRect();
+  var yOffset = event.clientY - rect.top;
+  var startMin = Math.min(45, Math.floor((yOffset / 120) * 60 / 15) * 15);
+  calSlotTarget = { date: dateStr, hour: hour, startMin: startMin };
+  openSlotPicker(dateStr, hour, startMin);
 }
 
-async function openSlotPicker(dateStr, hour) {
+async function openSlotPicker(dateStr, hour, startMin) {
   var backdrop = document.getElementById('slot-picker-backdrop');
   var list = document.getElementById('slot-picker-list');
-  var label = formatSlotTime(hour, 0);
+  var label = formatSlotTime(hour, startMin || 0);
 
   document.getElementById('slot-picker-title').textContent = 'Assign to ' + label;
   document.getElementById('slot-picker-sub').textContent = dateStr + ' at ' + label;
@@ -1458,7 +1530,7 @@ async function assignTaskToSlot(taskId) {
   try {
     var duration = task.duration || 30;
     var startHour = calSlotTarget.hour;
-    var startMin = 0;
+    var startMin = calSlotTarget.startMin || 0;
     var endMin = startMin + duration;
     var endHour = startHour + Math.floor(endMin / 60);
     endMin = endMin % 60;
@@ -1504,7 +1576,7 @@ function createTaskForSlot() {
   // Open the task form, after save we'll schedule it
   openTaskForm();
   // Store slot target for after save
-  window._pendingSlotTarget = calSlotTarget ? { date: calSlotTarget.date, hour: calSlotTarget.hour } : null;
+  window._pendingSlotTarget = calSlotTarget ? { date: calSlotTarget.date, hour: calSlotTarget.hour, startMin: calSlotTarget.startMin || 0 } : null;
 }
 
 /* ─── Remove task from calendar slot (auto-status → Todo) ─── */

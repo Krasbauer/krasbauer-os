@@ -1612,7 +1612,7 @@ textarea.field-text-input {
 
 .cal-hour-row {
   display: flex;
-  min-height: 60px;
+  min-height: 120px;
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
 }
@@ -1631,7 +1631,7 @@ textarea.field-text-input {
 .cal-hour-slots {
   flex: 1;
   position: relative;
-  min-height: 60px;
+  min-height: 120px;
   cursor: pointer;
 }
 
@@ -1639,16 +1639,17 @@ textarea.field-text-input {
   background: rgba(59,130,246,0.04);
 }
 
-/* Half-hour line */
+/* Quarter-hour gridlines via gradient background */
+.cal-hour-slots {
+  background-image:
+    linear-gradient(to bottom, transparent calc(30px - 1px), rgba(255,255,255,0.06) calc(30px - 1px), rgba(255,255,255,0.06) 30px, transparent 30px),
+    linear-gradient(to bottom, transparent calc(60px - 1px), rgba(255,255,255,0.14) calc(60px - 1px), rgba(255,255,255,0.14) 60px, transparent 60px),
+    linear-gradient(to bottom, transparent calc(90px - 1px), rgba(255,255,255,0.06) calc(90px - 1px), rgba(255,255,255,0.06) 90px, transparent 90px);
+}
+
+/* Remove the old single half-hour line pseudo-element */
 .cal-hour-slots::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: var(--border-subtle);
-  opacity: 0.4;
+  content: none;
 }
 
 /* Scheduled task block on calendar */
