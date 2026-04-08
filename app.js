@@ -2365,6 +2365,7 @@ document.getElementById('refresh-btn').addEventListener('click', refreshAllData)
 function openSettings() {
   document.getElementById('settings-overlay').classList.add('open');
   document.getElementById('settings-panel').classList.add('open');
+  renderCacheVersion();
 }
 
 function closeSettings() {
@@ -3137,6 +3138,18 @@ async function confirmImport() {
 }
 
 /* ─── Backup reminder ─── */
+async function renderCacheVersion() {
+  var el = document.getElementById('cache-version-label');
+  if (!el) return;
+  if ('caches' in window) {
+    var keys = await caches.keys();
+    var kosCache = keys.find(function(k) { return k.startsWith('krasbauer-os-'); });
+    el.textContent = kosCache || 'no cache';
+  } else {
+    el.textContent = 'not cached';
+  }
+}
+
 function renderBackupStatus() {
   var card = document.getElementById('backup-status-card');
   if (!card) return;
