@@ -1,8 +1,15 @@
 /* ═══════════════════════════════════════════
    INDEXEDDB — DATA LAYER
    ═══════════════════════════════════════════ */
-var APP_VERSION = '1.0.3';
+var APP_VERSION = '1.0.4';
 var PATCHNOTES = [
+  {
+    version: '1.0.4',
+    date: '2026-04-08',
+    changes: [
+      'Added Update App button in Settings — tap to pull latest version without reinstalling'
+    ]
+  },
   {
     version: '1.0.3',
     date: '2026-04-08',
@@ -271,10 +278,40 @@ async function initApp() {
 /* ═══════════════════════════════════════════
    SERVICE WORKER
    ═══════════════════════════════════════════ */
+var swRegistration = null;
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
-    .then(function(reg) { console.log('[SW] Registered:', reg.scope); })
+    .then(function(reg) {
+      swRegistration = reg;
+      console.log('[SW] Registered:', reg.scope);
+    })
     .catch(function(err) { console.error('[SW] Failed:', err); });
+
+  // When a new SW takes over, reload to get fresh assets
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    window.location.reload();
+  });
+}
+
+async function checkForAppUpdate() {
+  if (!swRegistration) { showToast('Service worker not ready'); return; }
+  try {
+    var btn = document.getElementById('update-app-btn');
+    if (btn) btn.textContent = 'Checking…';
+    await swRegistration.update();
+    // If controllerchange fires, the page will reload automatically.
+    // If we reach here after a moment with no reload, we're up to date.
+    setTimeout(function() {
+      if (btn) btn.textContent = 'Update App';
+      showToast('Already up to date ✓');
+    }, 2000);
+  } catch (err) {
+    console.error('[checkForAppUpdate]', err);
+    var btn = document.getElementById('update-app-btn');
+    if (btn) btn.textContent = 'Update App';
+    showToast('Update check failed');
+  }
 }
 
 /* ═══════════════════════════════════════════
